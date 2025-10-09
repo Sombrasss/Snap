@@ -1,20 +1,28 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Abrir Navegador Padrão</title>
+  <meta charset="UTF-8">
+  <title>Embed FileMoon</title>
+  <style>
+    body { background: #111; color: #fff; text-align: center; }
+    .buttons { margin: 20px; }
+    iframe { width: 100%; height: 80vh; border: none; }
+  </style>
 </head>
 <body>
+  <h2>Seletor de vídeo</h2>
+  <div class="buttons">
+    <button onclick="abrir('https://filemoon.to/algum_link_de_video')">Vídeo 1</button>
+    <button onclick="abrir('https://filemoon.to/outro_video')">Vídeo 2</button>
+    <!-- ... outros botões conforme os links que você extrair ... -->
+  </div>
+  <iframe id="player" src=""></iframe>
 
-<button onclick="abrirNavegador()">Abrir Navegador Padrão</button>
-
-<script>
-function abrirNavegador() {
-    var url = "https://www.exemplo.com";
-    window.open(url);
-}
-</script>
-
+  <script>
+    function abrir(url) {
+      const iframe = document.getElementById('player');
+      iframe.src = url;
+    }
+  </script>
 </body>
 </html>
