@@ -1,20 +1,23 @@
 export async function handler(event) {
-  const params = new URLSearchParams(event.rawQuery);
-  const url = params.get("url");
+  const url = event.queryStringParameters.url;
 
   if (!url) {
-    return { statusCode: 400, body: "URL não fornecida" };
+    return { statusCode: 400, body: "URL ausente." };
   }
 
   try {
-    const response = await fetch(url);
-    const html = await response.text();
+    const resposta = await fetch(url);
+    const html = await resposta.text();
+
     return {
       statusCode: 200,
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-      body: html,
+      headers: { 
+        "Content-Type": "text/html; charset=utf-8",
+        "Access-Control-Allow-Origin": "*" 
+      },
+      body: html
     };
-  } catch (error) {
-    return { statusCode: 500, body: "Erro ao buscar URL: " + error.message };
+  } catch (err) {
+    return { statusCode: 500, body: "Erro: " + err.message };
   }
 }
