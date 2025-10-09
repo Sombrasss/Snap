@@ -3,117 +3,115 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🎬 FileMoon Organizado por Temporada</title>
+  <title>Transformar links FileMoon</title>
   <style>
-    body {
-      background:#0a0a0a;
-      color:#fff;
-      font-family: Poppins, sans-serif;
-      padding:20px;
-      text-align:center;
-    }
-    input, textarea {
-      width:90%;
-      padding:10px;
-      border-radius:8px;
-      border:none;
-      margin:10px 0;
-      background:#1a1a1a;
-      color:#fff;
-    }
-    button {
-      background:#ff4747;
-      color:#fff;
-      border:none;
-      padding:10px 18px;
-      border-radius:8px;
-      margin:5px;
-      cursor:pointer;
-      transition:0.3s;
-    }
-    button:hover { background:#ff6a00; }
-    .temporada {
-      margin-top:25px;
-      background:#111;
-      border-radius:10px;
-      padding:10px;
-      box-shadow:0 0 10px #000;
-    }
-    .titulo-temp {
-      font-weight:bold;
-      font-size:20px;
-      margin-bottom:10px;
-      color:#ffae00;
-    }
-    iframe {
-      width:100%;
-      height:70vh;
-      border:none;
-      border-radius:10px;
-      margin-top:15px;
-      background:#000;
-    }
+    body { background:#111; color:#fff; font-family: Poppins, sans-serif; padding:20px; text-align:center; }
+    input { width:90%; padding:10px; border-radius:8px; border:none; margin:8px 0; }
+    button { background:#ff4747; color:#fff; border:none; padding:10px 18px; border-radius:8px; margin:6px; cursor:pointer; }
+    #lista { margin-top:12px; display:flex; flex-direction:column; gap:12px; align-items:center; }
+    .temporada { background:#222; padding:10px; border-radius:8px; width:90%; }
+    .episodios { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:6px; }
+    iframe { width:100%; height:65vh; border:none; margin-top:14px; border-radius:8px; background:#000; }
+    .btn-small { padding:6px 10px; font-size:14px; }
   </style>
 </head>
 <body>
-  <h1>🎬 Organizador FileMoon</h1>
-  <p>Cole aqui os links (um por linha):</p>
-  <textarea id="links" rows="8" placeholder="https://filemoon.to/d/dp9v34i4rnnz/1x1.mp4&#10;https://filemoon.to/d/abc123/1x2.mp4&#10;https://filemoon.to/d/xyz321/2x1.mp4"></textarea>
-  <br>
-  <button onclick="gerar()">Gerar Botões</button>
+  <h2>Transformador FileMoon → formato `/e/.../nome`</h2>
 
-  <div id="saida"></div>
-  <iframe id="player"></iframe>
+  <input id="singleLink" placeholder="Cole aqui um link filemoon (ex: https://filemoon.to/d/dp9v34i4rnnz/1x1.mp4)" />
+  <button onclick="transformSingle()" class="btn-small">Transformar e abrir</button>
+
+  <hr style="opacity:.2" />
+
+  <input id="pageLink" placeholder="Ou cole o link da pasta (ex: https://filemoon.sx/f/qmkil8hbfa)" />
+  <button onclick="carregarPagina()" class="btn-small">Carregar e extrair</button>
+
+  <div id="lista"></div>
+
+  <iframe id="player" src=""></iframe>
 
 <script>
-  // Função que transforma e organiza
-  function gerar() {
-    const texto = document.getElementById("links").value.trim();
-    if (!texto) return alert("Cole pelo menos um link FileMoon.");
-
-    const linhas = texto.split(/\n+/);
-    const episodios = {};
-
-    linhas.forEach(link => {
-      link = link.trim();
-      if (!link) return;
-
-      // transforma: /d/.../.mp4 → /e/.../
-      let novo = link.replace('/d/', '/e/').replace(/\.mp4.*$/i, '');
-      
-      // extrai nome (ex: 1x1, 2x3, etc)
-      const match = novo.match(/(\d+)x(\d+)/i);
-      if (match) {
-        const temp = match[1];
-        const ep = match[2];
-        if (!episodios[temp]) episodios[temp] = [];
-        episodios[temp].push({ episodio: ep, url: novo });
-      } else {
-        // Se não tiver padrão 1x1, põe numa categoria "Outros"
-        if (!episodios['Outros']) episodios['Outros'] = [];
-        episodios['Outros'].push({ episodio: link, url: novo });
-      }
-    });
-
-    // Gera o HTML organizado por temporada
-    let html = '';
-    for (const temp in episodios) {
-      html += `<div class="temporada"><div class="titulo-temp">📺 Temporada ${temp}</div>`;
-      // ordena episódios numericamente
-      episodios[temp].sort((a,b)=>a.episodio - b.episodio);
-      episodios[temp].forEach(ep => {
-        html += `<button onclick="abrir('${ep.url}')">▶️ Play ${temp}x${ep.episodio}</button>`;
-      });
-      html += `</div>`;
+  function transformarLink(filemoonUrl) {
+    if (!filemoonUrl) return filemoonUrl;
+    try {
+      return filemoonUrl
+        .trim()
+        .replace(/\/d\//, '/e/')
+        .replace(/\.mp4(?:\?.*)?$/i, '')
+        .replace(/\/+$/, '');
+    } catch (err) {
+      return filemoonUrl;
     }
-
-    document.getElementById("saida").innerHTML = html;
   }
 
-  // Abre o vídeo no iframe
+  function transformSingle() {
+    const inp = document.getElementById('singleLink').value.trim();
+    if (!inp) return alert('Cole um link primeiro.');
+    const novo = transformarLink(inp);
+    abrir(novo);
+    document.getElementById('lista').innerHTML = `<button onclick="abrir('${novo}')">Abrir ${novo}</button>`;
+  }
+
   function abrir(url) {
-    document.getElementById("player").src = url;
-    window.scrollTo({ top: document.getElementById("player").offsetTop, behavior: 'smooth' });
+    document.getElementById('player').src = url;
+  }
+
+  async function carregarPagina() {
+    const page = document.getElementById('pageLink').value.trim();
+    if (!page) return alert('Cole o link da pasta primeiro.');
+
+    try {
+      const resposta = await fetch(`/proxy?url=${encodeURIComponent(page)}`);
+      const html = await resposta.text();
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+
+      const anchors = Array.from(tmp.querySelectorAll('a'))
+        .filter(a => a.href && /filemoon\.(to|sx)/i.test(a.href) && /\.mp4/i.test(a.href));
+
+      if (anchors.length === 0) {
+        document.getElementById('lista').innerText = 'Nenhum link .mp4 do FileMoon encontrado.';
+        return;
+      }
+
+      const episodiosPorTemp = {};
+
+      anchors.forEach(a => {
+        const convertido = transformarLink(a.href);
+        const nomeArquivo = convertido.split('/').pop(); // exemplo: 1x1
+        const match = nomeArquivo.match(/^(\d+)x(\d+)/i);
+        if (match) {
+          const temp = match[1];
+          const ep = match[2];
+          if (!episodiosPorTemp[temp]) episodiosPorTemp[temp] = [];
+          episodiosPorTemp[temp].push({ ep, url: convertido });
+        }
+      });
+
+      const listaEl = document.getElementById('lista');
+      listaEl.innerHTML = '';
+
+      Object.keys(episodiosPorTemp).sort((a,b)=>a-b).forEach(temp => {
+        const bloco = document.createElement('div');
+        bloco.className = 'temporada';
+        bloco.innerHTML = `<h3>Temporada ${temp}</h3>`;
+        const epsDiv = document.createElement('div');
+        epsDiv.className = 'episodios';
+        episodiosPorTemp[temp]
+          .sort((a,b)=>a.ep-b.ep)
+          .forEach(({ ep, url }) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-small';
+            btn.innerText = `Play ${temp}x${ep}`;
+            btn.onclick = () => abrir(url);
+            epsDiv.appendChild(btn);
+          });
+        bloco.appendChild(epsDiv);
+        listaEl.appendChild(bloco);
+      });
+    } catch (err) {
+      alert('Erro ao carregar a página. Pode ser CORS. Use um proxy Netlify. Erro: ' + err.message);
+    }
   }
 </script>
 </body>
