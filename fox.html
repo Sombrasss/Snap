@@ -2,26 +2,75 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Embed FileMoon</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leitor FileMoon</title>
   <style>
-    body { background: #111; color: #fff; text-align: center; }
-    .buttons { margin: 20px; }
-    iframe { width: 100%; height: 80vh; border: none; }
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Poppins, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    input {
+      width: 80%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #ff4747;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #ff6a00;
+    }
+    iframe {
+      width: 100%;
+      height: 70vh;
+      border: none;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
-  <h2>Seletor de vídeo</h2>
-  <div class="buttons">
-    <button onclick="abrir('https://filemoon.to/algum_link_de_video')">Vídeo 1</button>
-    <button onclick="abrir('https://filemoon.to/outro_video')">Vídeo 2</button>
-    <!-- ... outros botões conforme os links que você extrair ... -->
-  </div>
+  <h1>🎬 FileMoon — Pasta de Vídeos</h1>
+  <input type="text" id="link" placeholder="Cole o link da pasta FileMoon aqui...">
+  <button onclick="carregarVideos()">Carregar vídeos</button>
+
+  <div id="videos"></div>
   <iframe id="player" src=""></iframe>
 
   <script>
-    function abrir(url) {
-      const iframe = document.getElementById('player');
-      iframe.src = url;
+    async function carregarVideos() {
+      const url = document.getElementById('link').value.trim();
+      if (!url) return alert("Cole o link da pasta FileMoon primeiro.");
+
+      const resposta = await fetch(`/proxy.js?url=${encodeURIComponent(url)}`);
+      const html = await resposta.text();
+
+      // Extrair links e nomes (ajustar conforme estrutura FileMoon)
+      const regex = /<a[^>]+href="(https:\/\/filemoon\.to\/[^"]+)"[^>]*>([^<]+)<\/a>/g;
+      let match, botoesHTML = "";
+
+      while ((match = regex.exec(html)) !== null) {
+        const linkVideo = match[1];
+        const nome = match[2];
+        botoesHTML += `<button onclick="abrir('${linkVideo}')">${nome}</button>`;
+      }
+
+      document.getElementById('videos').innerHTML = botoesHTML || "Nenhum vídeo encontrado.";
+    }
+
+    function abrir(link) {
+      document.getElementById('player').src = link;
     }
   </script>
 </body>
