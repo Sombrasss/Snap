@@ -3,117 +3,117 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Transformar links FileMoon</title>
+  <title>🎬 FileMoon Organizado por Temporada</title>
   <style>
-    body { background:#111; color:#fff; font-family: Poppins, sans-serif; padding:20px; text-align:center; }
-    input, textarea { width:90%; padding:10px; border-radius:8px; border:none; margin:8px 0; }
-    button { background:#ff4747; color:#fff; border:none; padding:10px 18px; border-radius:8px; margin:6px; cursor:pointer; }
-    #lista { margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
-    iframe { width:100%; height:65vh; border:none; margin-top:14px; border-radius:8px; background:#000; }
-    .btn-small { padding:6px 10px; font-size:14px; }
+    body {
+      background:#0a0a0a;
+      color:#fff;
+      font-family: Poppins, sans-serif;
+      padding:20px;
+      text-align:center;
+    }
+    input, textarea {
+      width:90%;
+      padding:10px;
+      border-radius:8px;
+      border:none;
+      margin:10px 0;
+      background:#1a1a1a;
+      color:#fff;
+    }
+    button {
+      background:#ff4747;
+      color:#fff;
+      border:none;
+      padding:10px 18px;
+      border-radius:8px;
+      margin:5px;
+      cursor:pointer;
+      transition:0.3s;
+    }
+    button:hover { background:#ff6a00; }
+    .temporada {
+      margin-top:25px;
+      background:#111;
+      border-radius:10px;
+      padding:10px;
+      box-shadow:0 0 10px #000;
+    }
+    .titulo-temp {
+      font-weight:bold;
+      font-size:20px;
+      margin-bottom:10px;
+      color:#ffae00;
+    }
+    iframe {
+      width:100%;
+      height:70vh;
+      border:none;
+      border-radius:10px;
+      margin-top:15px;
+      background:#000;
+    }
   </style>
 </head>
 <body>
-  <h2>Transformador FileMoon → formato `/e/.../nome`</h2>
+  <h1>🎬 Organizador FileMoon</h1>
+  <p>Cole aqui os links (um por linha):</p>
+  <textarea id="links" rows="8" placeholder="https://filemoon.to/d/dp9v34i4rnnz/1x1.mp4&#10;https://filemoon.to/d/abc123/1x2.mp4&#10;https://filemoon.to/d/xyz321/2x1.mp4"></textarea>
+  <br>
+  <button onclick="gerar()">Gerar Botões</button>
 
-  <!-- 1) Transformar um link avulso -->
-  <input id="singleLink" placeholder="Cole aqui um link filemoon (ex: https://filemoon.to/d/dp9v34i4rnnz/1x1.mp4)" />
-  <button onclick="transformSingle()" class="btn-small">Transformar e abrir</button>
-
-  <hr style="opacity:.2" />
-
-  <!-- 2) Buscar uma página (usando proxy) e extrair todos os links -->
-  <input id="pageLink" placeholder="Ou cole o link da pasta (ex: https://filemoon.sx/f/qmkil8hbfa)" />
-  <button onclick="carregarPagina()" class="btn-small">Carregar e extrair</button>
-
-  <div id="lista"></div>
-
-  <iframe id="player" src=""></iframe>
+  <div id="saida"></div>
+  <iframe id="player"></iframe>
 
 <script>
-  // Função que faz a transformação pedida:
-  // https://filemoon.to/d/<id>/<name>.mp4  ->  https://filemoon.to/e/<id>/<name>
-  function transformarLink(filemoonUrl) {
-    if (!filemoonUrl) return filemoonUrl;
-    try {
-      // normaliza espaços
-      const url = filemoonUrl.trim();
+  // Função que transforma e organiza
+  function gerar() {
+    const texto = document.getElementById("links").value.trim();
+    if (!texto) return alert("Cole pelo menos um link FileMoon.");
 
-      // só processa se for filemoon.to (ou filemoon.sx -> muda o host se quiser)
-      // usa regex para garantir que troca apenas a parte /d/ e remove .mp4 final
-      const novo = url
-        .replace(/\/d\//, '/e/')      // troca /d/ por /e/
-        .replace(/\.mp4(?:\?.*)?$/i, '') // remove .mp4 no fim (ignora query string)
-        .replace(/\/+$/, '');         // remove barras finais extras
+    const linhas = texto.split(/\n+/);
+    const episodios = {};
 
-      return novo;
-    } catch (err) {
-      return filemoonUrl;
-    }
-  }
+    linhas.forEach(link => {
+      link = link.trim();
+      if (!link) return;
 
-  // Usado para o botão "Transformar e abrir" para um link único
-  function transformSingle() {
-    const inp = document.getElementById('singleLink').value.trim();
-    if (!inp) return alert('Cole um link primeiro.');
-    const novo = transformarLink(inp);
-    // abre no iframe
-    document.getElementById('player').src = novo;
-    // mostra na lista também
-    document.getElementById('lista').innerHTML = `<button onclick="abrir('${novo}')">${novo}</button>`;
-  }
-
-  // Abre link no iframe (função usada pelos botões gerados)
-  function abrir(url) {
-    document.getElementById('player').src = url;
-  }
-
-  // Carrega uma página via proxy (se estiver usando Netlify ou outro proxy)
-  // e extrai todos os links filemoon*.to com .mp4 e transforma cada um
-  async function carregarPagina() {
-    const page = document.getElementById('pageLink').value.trim();
-    if (!page) return alert('Cole o link da pasta primeiro.');
-
-    try {
-      // Se você NÃO tiver um proxy, este fetch dará erro por CORS.
-      // Ajuste a rota /proxy para a sua função serverless (Netlify/Cloudflare/etc).
-      const resposta = await fetch(`/proxy?url=${encodeURIComponent(page)}`);
-      const html = await resposta.text();
-
-      // cria um elemento DOM temporário para parsear
-      const tmp = document.createElement('div');
-      tmp.innerHTML = html;
-
-      // pega todos os <a> que contenham filemoon.to e .mp4 (ou filemoon.sx)
-      const anchors = Array.from(tmp.querySelectorAll('a'))
-        .filter(a => {
-          if(!a.href) return false;
-          return /filemoon\.(to|sx)/i.test(a.href) && /\.mp4/i.test(a.href);
-        });
-
-      if (anchors.length === 0) {
-        document.getElementById('lista').innerText = 'Nenhum link .mp4 do FileMoon encontrado nessa página.';
-        return;
+      // transforma: /d/.../.mp4 → /e/.../
+      let novo = link.replace('/d/', '/e/').replace(/\.mp4.*$/i, '');
+      
+      // extrai nome (ex: 1x1, 2x3, etc)
+      const match = novo.match(/(\d+)x(\d+)/i);
+      if (match) {
+        const temp = match[1];
+        const ep = match[2];
+        if (!episodios[temp]) episodios[temp] = [];
+        episodios[temp].push({ episodio: ep, url: novo });
+      } else {
+        // Se não tiver padrão 1x1, põe numa categoria "Outros"
+        if (!episodios['Outros']) episodios['Outros'] = [];
+        episodios['Outros'].push({ episodio: link, url: novo });
       }
+    });
 
-      // cria botões transformados
-      const listaEl = document.getElementById('lista');
-      listaEl.innerHTML = '';
-      anchors.forEach(a => {
-        const original = a.href;
-        const convertido = transformarLink(original);
-        // mostra um botão com o nome ou com a própria url curta
-        const nome = (a.textContent || convertido).trim().slice(0,60);
-        const btn = document.createElement('button');
-        btn.className = 'btn-small';
-        btn.innerText = nome;
-        btn.onclick = () => abrir(convertido);
-        listaEl.appendChild(btn);
+    // Gera o HTML organizado por temporada
+    let html = '';
+    for (const temp in episodios) {
+      html += `<div class="temporada"><div class="titulo-temp">📺 Temporada ${temp}</div>`;
+      // ordena episódios numericamente
+      episodios[temp].sort((a,b)=>a.episodio - b.episodio);
+      episodios[temp].forEach(ep => {
+        html += `<button onclick="abrir('${ep.url}')">▶️ Play ${temp}x${ep.episodio}</button>`;
       });
-
-    } catch (err) {
-      alert('Erro ao carregar a página. Se for problema de CORS, precisa usar o proxy no seu domínio (ex: Netlify). \n\nErro: ' + err.message);
+      html += `</div>`;
     }
+
+    document.getElementById("saida").innerHTML = html;
+  }
+
+  // Abre o vídeo no iframe
+  function abrir(url) {
+    document.getElementById("player").src = url;
+    window.scrollTo({ top: document.getElementById("player").offsetTop, behavior: 'smooth' });
   }
 </script>
 </body>
