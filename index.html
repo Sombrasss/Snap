@@ -61,7 +61,7 @@
     if (!page) return alert('Cole o link da pasta primeiro.');
 
     try {
-     const resposta = await fetch(`/servidor1?url=${encodeURIComponent(page)}`);
+     const resposta = await fetch(`/.netlify/functions/servidor1?url=${encodeURIComponent(page)}`);
       const html = await resposta.text();
       const tmp = document.createElement('div');
       tmp.innerHTML = html;
